@@ -136,7 +136,7 @@ def start_run(payload: dict[str, Any]) -> JSONResponse:
     policy = str(payload.get("policy") or "strict")
 
     # Build app with checkpointer so we can inspect history later
-    app, memory = build_basic_agent_with_memory_checkpointer(max_steps=max_steps)
+    app, memory = build_basic_agent_with_memory_checkpointer()
 
     # Create run record
     run_id = uuid4()
