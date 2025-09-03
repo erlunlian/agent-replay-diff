@@ -28,6 +28,14 @@ async function diffRuns(left: string, right: string) {
   return res.json();
 }
 
+async function deleteRun(id: string) {
+  const res = await fetch(`http://localhost:8000/api/runs/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete run");
+  return res.json();
+}
+
 export default async function RunsPage() {
   const runs = await fetchRuns();
   return (
@@ -47,16 +55,25 @@ export default async function RunsPage() {
       <CompareForm runs={runs} />
       <div className="grid gap-3">
         {runs?.map((r) => (
-          <Link
-            key={r.id}
-            href={`/runs/${r.id}`}
-            className="rounded border p-3 hover:bg-accent"
-          >
-            <div className="text-sm font-medium">Run {r.id}</div>
-            <div className="text-xs text-muted-foreground">
-              status: {r.status} • thread: {r.thread_id}
-            </div>
-          </Link>
+          <div key={r.id} className="flex items-center justify-between rounded border p-3">
+            <Link href={`/runs/${r.id}`} className="flex-1 hover:underline">
+              <div className="text-sm font-medium">Run {r.id}</div>
+              <div className="text-xs text-muted-foreground">
+                status: {r.status} • thread: {r.thread_id}
+              </div>
+            </Link>
+            <form
+              action={async () => {
+                "use server";
+                await deleteRun(r.id);
+                revalidatePath("/runs");
+              }}
+            >
+              <button className="ml-3 inline-flex items-center rounded bg-red-600 px-2.5 py-1.5 text-white text-xs">
+                Delete
+              </button>
+            </form>
+          </div>
         ))}
       </div>
     </div>

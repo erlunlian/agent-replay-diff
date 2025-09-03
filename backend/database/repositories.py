@@ -179,3 +179,12 @@ class SpanRepository:
                 .order_by(SpanDB.created_at)
             ).all()
             return [SpanRepository._db_to_dom(r) for r in rows]
+
+    @staticmethod
+    def delete_for_run(run_id: UUID_t) -> None:
+        with Session(ENGINE) as session:
+            # Efficient bulk delete by primary key filter
+            rows = session.exec(select(SpanDB).where(SpanDB.run_id == run_id)).all()
+            for row in rows:
+                session.delete(row)
+            session.commit()

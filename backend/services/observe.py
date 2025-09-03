@@ -215,6 +215,26 @@ def _node_attrs(
     return attrs
 
 
+def _route_attrs(
+    *,
+    function_qualname: str,
+    status: str,
+    before_state: Any | None,
+    choice: Any | None = None,
+    error: BaseException | None = None,
+) -> dict[str, Any]:
+    attrs: dict[str, Any] = {
+        "function": function_qualname,
+        "status": status,
+        "before_state": before_state,
+    }
+    if choice is not None:
+        attrs["choice"] = _safe_json(choice)
+    if error is not None:
+        attrs["error"] = repr(error)
+    return attrs
+
+
 def _record_span(
     *,
     kind: str,
@@ -375,6 +395,68 @@ def instrument_node(name: str) -> Callable[[Callable[..., Any]], Callable[..., A
                         end_ts=end_ts,
                         attrs=attrs,
                         fingerprint=_hash_str(f"node:{name}:{qualname}"),
+                        node_override=name,
+                    )
+                    raise
+
+        return wrapper
+
+    return decorator
+
+
+def instrument_router(name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """Decorator to record a span for a routing/chooser function.
+
+    The recorded span is tagged with kind="route" and node_id=name to
+    associate the decision with the source node emitting conditional edges.
+    """
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        qualname = getattr(func, "__qualname__", func.__name__)
+
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            start_ts = _now()
+            before_state = _snapshot_state_dict(args[0]) if args else None
+            with span_context(
+                run_id=_get_ctx().get("run_id"),
+                node_id=name,
+                checkpoint_id=_get_ctx().get("checkpoint_id"),
+            ):
+                try:
+                    result = func(*args, **kwargs)
+                    end_ts = _now()
+                    attrs = _route_attrs(
+                        function_qualname=qualname,
+                        status="ok",
+                        before_state=before_state,
+                        choice=result,
+                    )
+                    _record_span(
+                        kind="route",
+                        name=name,
+                        start_ts=start_ts,
+                        end_ts=end_ts,
+                        attrs=attrs,
+                        fingerprint=_hash_str(f"route:{name}:{qualname}"),
+                        node_override=name,
+                    )
+                    return result
+                except Exception as exc:
+                    end_ts = _now()
+                    attrs = _route_attrs(
+                        function_qualname=qualname,
+                        status="error",
+                        before_state=before_state,
+                        error=exc,
+                    )
+                    _record_span(
+                        kind="route",
+                        name=name,
+                        start_ts=start_ts,
+                        end_ts=end_ts,
+                        attrs=attrs,
+                        fingerprint=_hash_str(f"route:{name}:{qualname}"),
                         node_override=name,
                     )
                     raise

@@ -21,6 +21,7 @@ from langgraph.graph import END, StateGraph
 from services.observe import (
     compile_with_checkpointer,
     instrument_node,
+    instrument_router,
     instrument_tool,
     record_stategraph_build,
 )
@@ -103,6 +104,7 @@ def _node_branch_b(state: BasicAgentState) -> BasicAgentState:
 
 
 # --- Routing helpers ---
+@instrument_router("timestamp")
 def _choose_branch(state: BasicAgentState) -> Literal["branch_a", "branch_b"]:
     """Decide which branch to take based on the random value."""
 
@@ -110,6 +112,7 @@ def _choose_branch(state: BasicAgentState) -> Literal["branch_a", "branch_b"]:
     return "branch_a" if rv >= 0.5 else "branch_b"
 
 
+@instrument_router("branch_decision")
 def _route_after_branch(state: BasicAgentState) -> Literal["continue", "end"]:
     """Decide whether to continue looping or end the graph."""
 
@@ -122,7 +125,7 @@ def _route_after_branch(state: BasicAgentState) -> Literal["continue", "end"]:
     return "continue"
 
 
-def build_basic_agent(max_steps: int = 3, *, checkpointer: object | None = None):
+def build_basic_agent(*, checkpointer: object | None = None):
     """Build and compile the demo graph.
 
     Returns a compiled LangGraph app which can be invoked with a state dict.
@@ -169,9 +172,9 @@ def build_basic_agent(max_steps: int = 3, *, checkpointer: object | None = None)
     return graph.compile()
 
 
-def build_basic_agent_with_memory_checkpointer(max_steps: int = 3):
+def build_basic_agent_with_memory_checkpointer():
     memory = InMemorySaver()
-    app = build_basic_agent(max_steps=max_steps, checkpointer=memory)
+    app = build_basic_agent(checkpointer=memory)
     return app, memory
 
 
@@ -185,7 +188,7 @@ def run_basic_agent(max_steps: int = 10, seed: int | None = None) -> BasicAgentS
     if seed is not None:
         random.seed(seed)
     # Register graph and start a run
-    app = build_basic_agent(max_steps=max_steps)
+    app = build_basic_agent()
     state = _initial_state(max_steps)
     try:
         result = app.invoke(state)

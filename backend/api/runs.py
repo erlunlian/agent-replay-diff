@@ -208,6 +208,17 @@ def list_spans(run_id: UUID) -> JSONResponse:
     return JSONResponse({"ok": True, "spans": [asdict(s) for s in spans]})
 
 
+@router.delete("/{run_id}")
+def delete_run(run_id: UUID) -> JSONResponse:
+    run = RunRepository.get_or_none(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="run not found")
+    # Delete spans first, then the run
+    SpanRepository.delete_for_run(run_id)
+    RunRepository.delete(run_id)
+    return JSONResponse({"ok": True})
+
+
 @router.get("/{run_id}/history")
 def get_history(run_id: UUID) -> JSONResponse:
     # TODO(prod): Load persisted LangGraph checkpointer state for this run/thread
