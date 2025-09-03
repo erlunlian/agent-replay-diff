@@ -66,8 +66,10 @@ class UserRepository:
     @staticmethod
     def delete(user_id: UUID_t) -> None:
         with Session(ENGINE) as session:
-            session.delete(UserDB(id=user_id))
-            session.commit()
+            row = session.get(UserDB, user_id)
+            if row is not None:
+                session.delete(row)
+                session.commit()
 
 
 class RunRepository:
@@ -128,8 +130,10 @@ class RunRepository:
     @staticmethod
     def delete(run_id: UUID_t) -> None:
         with Session(ENGINE) as session:
-            session.delete(RunDB(id=run_id))
-            session.commit()
+            row = session.get(RunDB, run_id)
+            if row is not None:
+                session.delete(row)
+                session.commit()
 
 
 class SpanRepository:
