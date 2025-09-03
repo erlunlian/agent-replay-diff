@@ -1,0 +1,79 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Editor/IDE
+.vscode/
+.idea/
+*.iml
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+ENV/
+env/
+pip-wheel-metadata/
+*.egg-info/
+dist/
+build/
+.eggs/
+.coverage
+.coverage.*
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.dmypy.json
+.pytype/
+
+# Databases
+*.sqlite3
+*.db
+backend/local.db
+
+# Node/JS (root-level safeguards)
+node_modules/
+.eslintcache
+
+# Next.js (top-level safeguards)
+.next/
+out/
+.vercel/
+.turbo/
+
+# Webapp-specific (also ignored in webapp/.gitignore)
+webapp/.next/
+webapp/out/
+webapp/node_modules/
+webapp/.vercel/
+webapp/.turbo/
+webapp/.env
+webapp/.env.*
+!webapp/.env.example
+webapp/.eslintcache
+
+# Backend virtualenv
+backend/venv/
+
+

@@ -1,0 +1,26 @@
+---
+globs: backend/**
+alwaysApply: false
+---
+Guidelines (always follow):
+
+- DB models define database table schemas. Place them in `backend/database/models.py`.
+- Domain models define business-logic data objects. Place them in `backend/domain/models.py`.
+- Repository layer defines the data access layer. Place it in `backend/database/repositories.py`.
+  - Repositories are the ONLY layer allowed to import and operate on DB models from `backend/database/models.py`.
+  - Repositories must accept and return domain models from `backend/domain/models.py` (never expose DB models to callers).
+- Enums shared across DB and domain live in `backend/enums/enums.py`.
+
+Repository patterns (from `UserRepository`):
+
+- Class-based repository with only `@staticmethod` methods.
+- Each operation uses a short-lived `Session(ENGINE)` via a context manager.
+- Methods accept and return domain models (e.g., `domain.models.User`), never DB models.
+- A private mapper `_db_to_dom(db: UserDB) -> UserDom` centralizes DB→domain conversion.
+- Create/Update: construct `UserDB(...)`, `session.add(...)`, then `session.commit()`, returning the original domain object.
+- Read by id: `session.get(UserDB, id)`; `get` assumes existence, `get_or_none` returns `None` if missing.
+- List: `session.exec(select(UserDB).order_by(UserDB.created_at.desc())).all()` and map to domain models.
+- Delete: `session.delete(UserDB(id=...))` then `session.commit()`; returns `None`.
+- Queries and ordering live in the repository; no leakage of DB concerns to callers.
+- Import boundaries: repository imports `ENGINE`, `UserDB`, `Session/select`, and the domain model alias; callers never import DB models.
+- Type hints use Python 3.12 style (e.g., `UserDom | None`, `list[UserDom]`).

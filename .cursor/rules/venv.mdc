@@ -1,0 +1,15 @@
+---
+globs: backend/**
+alwaysApply: false
+---
+When proposing or executing any shell/terminal command for this project's backend directory:
+
+- Always first activate the backend virtual environment:
+
+```bash
+cd /Users/erlunlian/agent-checkpoint-replay/backend && source venv/bin/activate
+```
+
+- If the environment is already active, proceed without re-activating.
+- Prefer non-interactive flags where available (e.g., `--yes`).
+- Assume default shell is `/bin/zsh` on macOS.

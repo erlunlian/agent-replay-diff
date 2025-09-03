@@ -1,0 +1,7 @@
+---
+globs: backend/**
+alwaysApply: false
+---
+Use modern Python 3.12+ type hinting:
+- Use built-in generics (e.g., list[str], dict[str, int]) instead of typing.List/typing.Dict.
+- Use union types with `|` (e.g., str | None) instead of Optional[str].
